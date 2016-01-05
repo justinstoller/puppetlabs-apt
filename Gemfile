@@ -1,12 +1,14 @@
+# vim:ft=ruby
+
 source ENV['GEM_SOURCE'] || "https://rubygems.org"
 
-def location_for(place, fake_version = nil)
-  if place =~ /^(git:[^#]*)#(.*)/
-    [fake_version, { :git => $1, :branch => $2, :require => false }].compact
+def location_for(place, version = nil)
+  if place =~ /^(git[:@][^#]*)#(.*)/
+    [fake_version, { :git => $1, :branch => $2}].compact
   elsif place =~ /^file:\/\/(.*)/
-    ['>= 0', { :path => File.expand_path($1), :require => false }]
+    ['>= 0', { :path => File.expand_path($1)}]
   else
-    [place, { :require => false }]
+    [place, version].compact
   end
 end
 
@@ -20,30 +22,12 @@ group :development, :unit_tests do
 end
 
 group :system_tests do
-  if beaker_version = ENV['BEAKER_VERSION']
-    gem 'beaker', *location_for(beaker_version)
-  end
-  if beaker_rspec_version = ENV['BEAKER_RSPEC_VERSION']
-    gem 'beaker-rspec', *location_for(beaker_rspec_version)
-  else
-    gem 'beaker-rspec',  :require => false
-  end
+  gem 'beaker-rspec',  :require => false
   gem 'serverspec',    :require => false
-  gem 'beaker-puppet_install_helper', :github => 'justinstoller/beaker-puppet_install_helper', :branch => 'master', :require => false
 end
 
 
 
-if facterversion = ENV['FACTER_GEM_VERSION']
-  gem 'facter', facterversion, :require => false
-else
-  gem 'facter', :require => false
-end
+gem 'facter', *location_for(ENV['FACTER_GEM_VERSION']), require => false
+gem 'puppet', *location_for(ENV['PUPPET_GEM_VERSION']), require => false
 
-if puppetversion = ENV['PUPPET_GEM_VERSION']
-  gem 'puppet', puppetversion, :require => false
-else
-  gem 'puppet', :require => false
-end
-
-# vim:ft=ruby
